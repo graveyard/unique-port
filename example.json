@@ -1,0 +1,168 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Example use of Custom::UniquePort",
+    "Outputs": {
+        "Port1": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "Port1",
+                    "Port"
+                ]
+            }
+        },
+        "Port2": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "Port2",
+                    "Port"
+                ]
+            }
+        },
+        "Port3": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "Port3",
+                    "Port"
+                ]
+            }
+        }
+
+    },
+    "Parameters": {
+        "LambdaArn": {
+            "Type": "String"
+        },
+        "DynamoRegion": {
+            "Type": "String"
+        },
+        "LockTable": {
+            "Type": "String"
+        },
+        "PortsTable": {
+            "Type": "String"
+        },
+        "Key": {
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "CustomUniquePortSNSTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+                "Subscription": [
+                    {
+                        "Endpoint": {
+                            "Ref": "LambdaArn"
+                        },
+                        "Protocol": "Lambda"
+                    }
+                ]
+            }
+        },
+        "Port1": {
+            "Type": "Custom::UniquePort",
+            "Properties": {
+                "ServiceToken": {
+                    "Ref": "CustomUniquePortSNSTopic"
+                },
+                "DynamoRegion": {
+                    "Ref": "DynamoRegion"
+                },
+                "DynamoEndpoint": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "dynamodb.",
+                            {
+                                "Ref": "DynamoRegion"
+                            },
+                            ".amazonaws.com"
+                        ]
+                    ]
+                },
+                "DynamoLockTable": {
+                    "Ref": "LockTable"
+                },
+                "DynamoTable": {
+                    "Ref": "PortsTable"
+                },
+                "Key": {
+                    "Ref": "Key"
+                },
+                "InitialPortRanges": [
+                    "10000-60000"
+                ]
+            }
+        },
+        "Port2": {
+            "Type": "Custom::UniquePort",
+            "Properties": {
+                "ServiceToken": {
+                    "Ref": "CustomUniquePortSNSTopic"
+                },
+                "DynamoRegion": {
+                    "Ref": "DynamoRegion"
+                },
+                "DynamoEndpoint": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "dynamodb.",
+                            {
+                                "Ref": "DynamoRegion"
+                            },
+                            ".amazonaws.com"
+                        ]
+                    ]
+                },
+                "DynamoLockTable": {
+                    "Ref": "LockTable"
+                },
+                "DynamoTable": {
+                    "Ref": "PortsTable"
+                },
+                "Key": {
+                    "Ref": "Key"
+                },
+                "InitialPortRanges": [
+                    "10000-60000"
+                ]
+            }
+        },
+        "Port3": {
+            "Type": "Custom::UniquePort",
+            "Properties": {
+                "ServiceToken": {
+                    "Ref": "CustomUniquePortSNSTopic"
+                },
+                "DynamoRegion": {
+                    "Ref": "DynamoRegion"
+                },
+                "DynamoEndpoint": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "dynamodb.",
+                            {
+                                "Ref": "DynamoRegion"
+                            },
+                            ".amazonaws.com"
+                        ]
+                    ]
+                },
+                "DynamoLockTable": {
+                    "Ref": "LockTable"
+                },
+                "DynamoTable": {
+                    "Ref": "PortsTable"
+                },
+                "Key": {
+                    "Ref": "Key"
+                },
+                "InitialPortRanges": [
+                    "10000-60000"
+                ]
+            }
+        }
+    }
+}

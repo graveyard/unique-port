@@ -1,0 +1,20 @@
+package: github.com/Clever/unique-port
+import:
+- package: github.com/aws/aws-sdk-go
+  version: f28e73d4791500a90d49190e0a01b769748cc2a8
+  subpackages:
+  - aws
+  - internal/endpoints
+  - internal/protocol/json/jsonutil
+  - internal/protocol/jsonrpc
+  - internal/protocol/query
+  - internal/protocol/rest
+  - internal/protocol/xml/xmlutil
+  - internal/signer/v4
+  - service/dynamodb
+  - service/sts
+- package: github.com/dfuentes/ddbsync
+  version: f13fbebcc65afb971c7adcd7731d18ae9b3a6990
+- package: github.com/vaughan0/go-ini
+  version: a98ad7ee00ec53921f08832bc06ecf7fd600e6a1
+- package: github.com/willf/bitset
