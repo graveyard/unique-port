@@ -13,11 +13,7 @@ export TEST_DYNAMODB_LOCKTABLE ?= custom-cf-resource-uniqueport-LockTable-CBHO33
 export TEST_DYNAMODB_PORTSTABLE ?= custom-cf-resource-uniqueport-PortsTable-1BVFH9XOQTV10
 test: $(PKGS)
 
-$(GOPATH)/bin/glide:
-	@go get github.com/Masterminds/glide
 
-install_deps: $(GOPATH)/bin/glide
-	@$(GOPATH)/bin/glide install
 
 
 $(PKGS): golang-test-all-deps
@@ -35,5 +31,3 @@ uniqueport.zip: lambda.js uniqueport
 release: uniqueport.zip
 	aws s3 cp uniqueport.zip s3://$$PUBLIC_AWS_BUCKET/uniqueport.zip --acl public-read
 
-vendor: golang-godep-vendor-deps
-	$(call golang-godep-vendor,$(PKGS))
