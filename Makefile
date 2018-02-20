@@ -31,3 +31,5 @@ uniqueport.zip: lambda.js uniqueport
 release: uniqueport.zip
 	aws s3 cp uniqueport.zip s3://$$PUBLIC_AWS_BUCKET/uniqueport.zip --acl public-read
 
+install_deps: golang-dep-vendor-deps
+	$(call golang-dep-vendor)
