@@ -9,21 +9,46 @@
 
 [[projects]]
   name = "github.com/aws/aws-sdk-go"
-  packages = ["aws","aws/awserr","aws/awsutil","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/defaults","aws/ec2metadata","aws/request","aws/service","aws/service/serviceinfo","internal/endpoints","internal/protocol/json/jsonutil","internal/protocol/jsonrpc","internal/protocol/rest","internal/signer/v4","service/dynamodb"]
-  revision = "f28e73d4791500a90d49190e0a01b769748cc2a8"
-  version = "v0.9.13"
+  packages = [
+    "aws",
+    "aws/awserr",
+    "aws/awsutil",
+    "aws/client",
+    "aws/client/metadata",
+    "aws/credentials",
+    "aws/endpoints",
+    "aws/request",
+    "aws/signer/v4",
+    "internal/sdkrand",
+    "internal/shareddefaults",
+    "private/protocol",
+    "private/protocol/json/jsonutil",
+    "private/protocol/jsonrpc",
+    "private/protocol/rest",
+    "service/dynamodb"
+  ]
+  revision = "63324a33d7e42a386c04d4daec764a3de243492e"
+  version = "v1.13.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/dfuentes/ddbsync"
-  packages = [".","models"]
+  packages = [
+    ".",
+    "models"
+  ]
   revision = "f13fbebcc65afb971c7adcd7731d18ae9b3a6990"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/vaughan0/go-ini"
+  name = "github.com/go-ini/ini"
   packages = ["."]
-  revision = "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
+  revision = "32e4c1e6bc4e7d0d8451aa6b75200d19e37a536a"
+  version = "v1.32.0"
+
+[[projects]]
+  name = "github.com/jmespath/go-jmespath"
+  packages = ["."]
+  revision = "0b12d6b5"
 
 [[projects]]
   name = "github.com/willf/bitset"
@@ -33,6 +58,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a2dd17e58de936e54aeaaad8733738c681d6e045898b24ff7790497678189841"
+  inputs-digest = "7814e50b065ed51df1eebe69a9ca0039428f60d813efcef27de638fdb68cd7b3"
   solver-name = "gps-cdcl"
   solver-version = 1
