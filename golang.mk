@@ -1,11 +1,17 @@
 # This is the default Clever Golang Makefile.
 # It is stored in the dev-handbook repo, github.com/Clever/dev-handbook
 # Please do not alter this file directly.
-GOLANG_MK_VERSION := 0.3.3
+GOLANG_MK_VERSION := 1.0.0
 
 SHELL := /bin/bash
 SYSTEM := $(shell uname -a | cut -d" " -f1 | tr '[:upper:]' '[:lower:]')
-.PHONY: golang-test-deps bin/dep golang-ensure-curl-installed
+.PHONY: golang-test-deps golang-ensure-curl-installed
+
+# set timezone to UTC for golang to match circle and deploys
+export TZ=UTC
+
+# go build flags for use across all commands which accept them
+GO_BUILD_FLAGS := "-mod=vendor"
 
 # if the gopath includes several directories, use only the first
 GOPATH=$(shell echo $$GOPATH | cut -d: -f1)
@@ -29,49 +35,21 @@ _ := $(if  \
 endef
 
 # FGT is a utility that exits with 1 whenever any stderr/stdout output is recieved.
+# We pin its version since its a simple tool that does its job as-is;
+# so we're defended against it breaking or changing in the future.
 FGT := $(GOPATH)/bin/fgt
 $(FGT):
-	go get github.com/GeertJohan/fgt
+	go get github.com/GeertJohan/fgt@262f7b11eec07dc7b147c44641236f3212fee89d
 
 golang-ensure-curl-installed:
 	@command -v curl >/dev/null 2>&1 || { echo >&2 "curl not installed. Please install curl."; exit 1; }
 
-DEP_VERSION = v0.4.1
-DEP_INSTALLED := $(shell [[ -e "bin/dep" ]] && bin/dep version | grep version | grep -v go | cut -d: -f2 | tr -d '[:space:]')
-# Dep is a tool used to manage Golang dependencies. It is the offical vendoring experiment, but
-# not yet the official tool for Golang.
-ifeq ($(DEP_VERSION),$(DEP_INSTALLED))
-bin/dep: # nothing to do, dep is already up-to-date
-else
-CACHED_DEP = /tmp/dep-$(DEP_VERSION)
-bin/dep: golang-ensure-curl-installed
-	@echo "Updating dep..."
-	@mkdir -p bin
-	@if [ ! -f $(CACHED_DEP) ]; then curl -o $(CACHED_DEP) -sL https://github.com/golang/dep/releases/download/$(DEP_VERSION)/dep-$(SYSTEM)-amd64; fi;
-	@cp $(CACHED_DEP) bin/dep
-	@chmod +x bin/dep || true
-endif
-
-golang-dep-vendor-deps: bin/dep
-
-# golang-godep-vendor is a target for saving dependencies with the dep tool
-# to the vendor/ directory. All nested vendor/ directories are deleted via
-# the prune command.
-# In CI, -vendor-only is used to avoid updating the lock file.
-ifndef CI
-define golang-dep-vendor
-bin/dep ensure -v
-endef
-else
-define golang-dep-vendor
-bin/dep ensure -v -vendor-only
-endef
-endif
-
 # Golint is a tool for linting Golang code for common errors.
+# We pin its version because an update could add a new lint check which would make
+# previously passing tests start failing without changing our code.
 GOLINT := $(GOPATH)/bin/golint
 $(GOLINT):
-	go get github.com/golang/lint/golint
+	go get golang.org/x/lint/golint@738671d3881b9731cc63024d5d88cf28db875626
 
 # golang-fmt-deps requires the FGT tool for checking output
 golang-fmt-deps: $(FGT)
@@ -80,7 +58,7 @@ golang-fmt-deps: $(FGT)
 # arg1: pkg path
 define golang-fmt
 @echo "FORMATTING $(1)..."
-@$(FGT) gofmt -l=true $(GOPATH)/src/$(1)/*.go
+@PKG_PATH=$$(go list -f '{{.Dir}}' $(1)); $(FGT) gofmt -l=true $${PKG_PATH}/*.go
 endef
 
 # golang-lint-deps requires the golint tool for golang linting.
@@ -90,7 +68,7 @@ golang-lint-deps: $(GOLINT)
 # arg1: pkg path
 define golang-lint
 @echo "LINTING $(1)..."
-@find $(GOPATH)/src/$(1)/*.go -type f | grep -v gen_ | xargs $(GOLINT)
+@PKG_PATH=$$(go list -f '{{.Dir}}' $(1)); find $${PKG_PATH}/*.go -type f | grep -v gen_ | xargs $(GOLINT)
 endef
 
 # golang-lint-deps-strict requires the golint tool for golang linting.
@@ -101,7 +79,7 @@ golang-lint-deps-strict: $(GOLINT) $(FGT)
 # arg1: pkg path
 define golang-lint-strict
 @echo "LINTING $(1)..."
-@find $(GOPATH)/src/$(1)/*.go -type f | grep -v gen_ | xargs $(FGT) $(GOLINT)
+@PKG_PATH=$$(go list -f '{{.Dir}}' $(1)); find $${PKG_PATH}/*.go -type f | grep -v gen_ | xargs $(FGT) $(GOLINT)
 endef
 
 # golang-test-deps is here for consistency
@@ -111,7 +89,7 @@ golang-test-deps:
 # arg1: pkg path
 define golang-test
 @echo "TESTING $(1)..."
-@go test -v $(1)
+@go test $(GO_BUILD_FLAGS) -v $(1)
 endef
 
 # golang-test-strict-deps is here for consistency
@@ -121,7 +99,7 @@ golang-test-strict-deps:
 # arg1: pkg path
 define golang-test-strict
 @echo "TESTING $(1)..."
-@go test -v -race $(1)
+@go test -v $(GO_BUILD_FLAGS) -race $(1)
 endef
 
 # golang-vet-deps is here for consistency
@@ -131,7 +109,7 @@ golang-vet-deps:
 # arg1: pkg path
 define golang-vet
 @echo "VETTING $(1)..."
-@go vet $(GOPATH)/src/$(1)/*.go
+@go vet $(GO_BUILD_FLAGS) $(1)
 endef
 
 # golang-test-all-deps installs all dependencies needed for different test cases.
@@ -165,14 +143,14 @@ endef
 define golang-build
 @echo "BUILDING..."
 @if [ -z "$$CI" ]; then \
-	go build -o bin/$(2) $(1); \
+	go build $(GO_BUILD_FLAGS) -o bin/$(2) $(1); \
 else \
 	echo "-> Building CGO binary"; \
-	CGO_ENABLED=0 go build -installsuffix cgo -o bin/$(2) $(1); \
+	CGO_ENABLED=0 go build $(GO_BUILD_FLAGS) -installsuffix cgo -o bin/$(2) $(1); \
 fi;
 endef
 
 # golang-update-makefile downloads latest version of golang.mk
 golang-update-makefile:
-	@wget https://raw.githubusercontent.com/Clever/dev-handbook/master/make/golang.mk -O /tmp/golang.mk 2>/dev/null
+	@wget https://raw.githubusercontent.com/Clever/dev-handbook/master/make/golang-v1.mk -O /tmp/golang.mk 2>/dev/null
 	@if ! grep -q $(GOLANG_MK_VERSION) /tmp/golang.mk; then cp /tmp/golang.mk golang.mk && echo "golang.mk updated"; else echo "golang.mk is up-to-date"; fi
